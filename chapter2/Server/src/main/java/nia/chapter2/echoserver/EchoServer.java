@@ -36,19 +36,28 @@ public class EchoServer {
 
     public void start() throws Exception {
         final EchoServerHandler serverHandler = new EchoServerHandler();
+        //创建ServerBootstrap
         EventLoopGroup group = new NioEventLoopGroup();
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.group(group)
+                    //指定所使用的NIO传输channel
                 .channel(NioServerSocketChannel.class)
+                    //指定socket端口
                 .localAddress(new InetSocketAddress(port))
+                    //添加一个EchoServerHandler到子Channel的ChannelPipeline
+                    /**
+                     * 当一个新的连接被接受时候，一个新的child channel将会被创建
+                     * 而ChannelInitializer将会把一个你的EchoServerHandler的实例添加到ChannelPipeline中
+                     *
+                     */
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel ch) throws Exception {
                         ch.pipeline().addLast(serverHandler);
                     }
                 });
-
+                //绑定服务器 调用sync 等待绑定完成
             ChannelFuture f = b.bind().sync();
             System.out.println(EchoServer.class.getName() +
                 " started and listening for connections on " + f.channel().localAddress());
